@@ -6,6 +6,7 @@ console.log('IS DEV:', isDev);
 
 module.exports = {
   context: path.resolve(__dirname, 'src'),
+  target: 'node',
   mode: 'development',
   entry: './index.ts',
   output: {
@@ -14,10 +15,6 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js', 'json'],
-    alias: {
-      '@modules': path.resolve(__dirname, 'src/modules'),
-      '@': path.resolve(__dirname, 'src'),
-    },
   },
   module: {
     rules: [
