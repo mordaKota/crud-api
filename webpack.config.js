@@ -1,13 +1,16 @@
-const path = require('path');
-const ESLintPlugin = require('eslint-webpack-plugin');
-const isDev = process.env.NODE_ENV === 'development';
-const isProd = !isDev;
-console.log('IS DEV:', isDev);
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import ESLintWebpackPlugin from "eslint-webpack-plugin";
+// const ESLintPlugin = import('eslint-webpack-plugin');
+
+export default {
   context: path.resolve(__dirname, 'src'),
   target: 'node',
-  mode: 'development',
+  mode: 'production',
   entry: './index.ts',
   output: {
     filename: 'bundle.js',
@@ -26,6 +29,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new ESLintPlugin(),
+    new ESLintWebpackPlugin(),
   ],
 };
