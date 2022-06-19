@@ -17,7 +17,7 @@
 | Prod Mode  | `npm run start:prod`  | Use webpack to make a build and run it with node                                |
 | Multi Mode | `npm run start:multi` | Use webpack to make a build and run it with node with MULTI env to run clusters |
 | Test Mode  | `npm run test`        | Run test scenarios                                                              |
-`
+
 ## 3 - Check API via Postman
 
 | #   | Method | Route                                       | Body Data                                                               | Description                |
