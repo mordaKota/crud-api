@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/crud-api/assignment.md",
   "main": "index.ts",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "cross-env nodemon ./dist/bundle.js",

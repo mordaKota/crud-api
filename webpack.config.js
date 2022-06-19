@@ -1,13 +1,7 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+const path = require('path');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-import ESLintWebpackPlugin from "eslint-webpack-plugin";
-// const ESLintPlugin = import('eslint-webpack-plugin');
-
-export default {
+module.exports = {
   context: path.resolve(__dirname, 'src'),
   target: 'node',
   mode: 'production',
@@ -29,6 +23,6 @@ export default {
     ],
   },
   plugins: [
-    new ESLintWebpackPlugin(),
+    new ESLintPlugin(),
   ],
 };

@@ -1,24 +1,20 @@
-// import cluster from 'cluster';
-// import 'dotenv/config';
+import cluster from 'cluster';
+import 'dotenv/config';
 import http from 'http';
 import { getUsers, getUser } from './repository';
 import { responses, port } from './utils';
 const numCPUs = 4; // todo
 
-// if (cluster.isPrimary && process.env.MULTI === 'true' && false) {
-//   for (let i = 0; i < numCPUs; i++) {
-//     cluster.fork();
-//   }
-// } else {
+if (cluster.isPrimary && process.env.MULTI === 'true') {
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+} else {
 
 const server = http.createServer(async (req, res) => {
-  // console.log(process.pid);
-  console.log('asdsad');
-  res.end();
 
-  /*
   const getUsersController = async (params: string[]) => {
-    // console.log(process.pid);
+    console.log(process.pid);
     const users = await getUsers();
     res.writeHead(203, { 'Content-Type': 'application/json' });
     res.write(JSON.stringify(users));
@@ -26,14 +22,22 @@ const server = http.createServer(async (req, res) => {
 
   const getUserController = async (params: string[]) => {
     const userUuid = params[0];
-
-    // IF NOT VALID UUID => 400
-
+    const uuidRegExp = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+    console.log(userUuid, !userUuid.match(uuidRegExp))
+    if (!userUuid.match(uuidRegExp)) {
+      res.writeHead(responses.ID_NOT_VALID.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.ID_NOT_VALID.message));
+      return;
+    }
     const user = await getUser(userUuid);
+    if (!user) {
+      res.writeHead(responses.NOT_FOUND.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.NOT_FOUND.message));
+      return;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.write(JSON.stringify(user));
   };
-
 
   const routes = [
     {
@@ -43,12 +47,10 @@ const server = http.createServer(async (req, res) => {
     },
     {
       method: 'GET',
-      // route: /api\/users\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/,
       route: /api\/users\/([^/]+)\/?$/,
       callback: getUserController,
     },
   ];
-
 
   const { url, method } = req;
 
@@ -78,13 +80,10 @@ const server = http.createServer(async (req, res) => {
 
   await userRoute.callback(params);
   res.end();
-
-   */
 });
 
 server.listen(port, () => {
-  console.log(`Server is running on port ${port}. Go to http://localhost:3033/`);
+  console.log(`Server is running on port ${port}. Go to http://localhost:${port}/`);
 });
 
-
-// }
+}
