@@ -5,12 +5,25 @@ export interface User {
   hobbies: Array<string>
 }
 
-const users: User[] = [
-  { id: '893e6c5a-41af-4f28-ad8c-cd92e1939e54', username: 'Misha', age: 1, hobbies: ['bike', 'cats'] },
-  { id: '893e6c5a-41af-4f28-ad8c-cd92e1939e45', username: 'Katya', age: 100, hobbies: ['bike', 'cats'] },
-];
+const users: User[] = [];
 
 export const getUsers = async (): Promise<User[]> => users;
 
 export const getUser = async (userUuid: string): Promise<User> => users.find((candidate) => candidate.id === userUuid);
 
+export const addUser = async (userObj: User): Promise<void> => { users.push(userObj) };
+
+export const updateUser = async (foundUser: User, updateObj: User): Promise<void> => {
+  foundUser.username = updateObj.username;
+  foundUser.age = updateObj.age;
+  foundUser.hobbies = updateObj.hobbies;
+};
+
+export const deleteUser = async (userUuid: string): Promise<void> => {
+ // users = users.filter(u => u.id !== userUuid);
+  for (let i = 0; i < users.length; i++) {
+    if (users[i].id === userUuid) {
+      users.splice(i, 1);
+    }
+  }
+};

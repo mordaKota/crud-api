@@ -1,8 +1,8 @@
 import cluster from 'cluster';
 import 'dotenv/config';
-import http from 'http';
-import { getUsers, getUser } from './repository';
-import { responses, port } from './utils';
+import http, {IncomingMessage, ServerResponse} from 'http';
+import {getUsers, getUser, User, addUser, updateUser, deleteUser} from './repository';
+import {responses, port, parseBody, isUserValid, generateUuid, isIdValid} from './utils';
 const numCPUs = 4; // todo
 
 if (cluster.isPrimary && process.env.MULTI === 'true') {
@@ -11,20 +11,20 @@ if (cluster.isPrimary && process.env.MULTI === 'true') {
   }
 } else {
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
 
   const getUsersController = async (params: string[]) => {
     console.log(process.pid);
     const users = await getUsers();
-    res.writeHead(203, { 'Content-Type': 'application/json' });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
     res.write(JSON.stringify(users));
   };
 
   const getUserController = async (params: string[]) => {
+
+    console.log(process.pid);
     const userUuid = params[0];
-    const uuidRegExp = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
-    console.log(userUuid, !userUuid.match(uuidRegExp))
-    if (!userUuid.match(uuidRegExp)) {
+    if (!isIdValid(userUuid)) {
       res.writeHead(responses.ID_NOT_VALID.code, { 'Content-Type': 'application/json' });
       res.write(JSON.stringify(responses.ID_NOT_VALID.message));
       return;
@@ -39,6 +39,64 @@ const server = http.createServer(async (req, res) => {
     res.write(JSON.stringify(user));
   };
 
+  const createUsersController = async (params: string[]) => {
+    let userObj: User = await parseBody(req) as User;
+    if (!isUserValid(userObj)) {
+      res.writeHead(responses.DATA_NOT_VALID.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.DATA_NOT_VALID.message));
+      return;
+    }
+    userObj.id = generateUuid();
+    await addUser(userObj);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+  };
+
+  const updateUsersController = async (params: string[]) => {
+    const userUuid = params[0];
+    if (!isIdValid(userUuid)) {
+      res.writeHead(responses.ID_NOT_VALID.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.ID_NOT_VALID.message));
+      return;
+    }
+
+    const user = await getUser(userUuid);
+    if (!user) {
+      res.writeHead(responses.NOT_FOUND.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.NOT_FOUND.message));
+      return;
+    }
+
+    let updateObj: User = await parseBody(req) as User;
+    if (!isUserValid(updateObj)) {
+      res.writeHead(responses.DATA_NOT_VALID.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.DATA_NOT_VALID.message));
+      return;
+    }
+
+    await updateUser(await getUser(userUuid), updateObj);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+  };
+
+  const deleteUsersController = async (params: string[]) => {
+    console.log("here");
+    const userUuid = params[0];
+    if (!isIdValid(userUuid)) {
+      res.writeHead(responses.ID_NOT_VALID.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.ID_NOT_VALID.message));
+      return;
+    }
+
+    const user = await getUser(userUuid);
+    if (!user) {
+      res.writeHead(responses.NOT_FOUND.code, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(responses.NOT_FOUND.message));
+      return;
+    }
+
+    await deleteUser(userUuid);
+    res.writeHead(204, { 'Content-Type': 'application/json' });
+  };
+
   const routes = [
     {
       method: 'GET',
@@ -50,36 +108,56 @@ const server = http.createServer(async (req, res) => {
       route: /api\/users\/([^/]+)\/?$/,
       callback: getUserController,
     },
+    {
+      method: 'POST',
+      route: /api\/users\/?$/,
+      callback: createUsersController,
+    },
+    {
+      method: 'PUT',
+      route: /api\/users\/([^/]+)\/?$/,
+      callback: updateUsersController,
+    },
+    {
+      method: 'DELETE',
+      route: /api\/users\/([^/]+)\/?$/,
+      callback: deleteUsersController,
+    },
   ];
 
   const { url, method } = req;
 
-  const userRoute = routes.find((route) => {
-    if (route.method !== method) {
-      return false;
+  try {
+    const userRoute = routes.find((route) => {
+      if (route.method !== method) {
+        return false;
+      }
+
+      if (!route.route.exec(url)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    console.log({ userRoute, url });
+
+    if (!userRoute) {
+      res.writeHead(responses.NOT_FOUND.code, { 'Content-Type': 'application/json' });
+      res.write(responses.NOT_FOUND.message);
+      res.end();
+      return;
     }
 
-    if (!route.route.exec(url)) {
-      return false;
-    }
+    const params = [...userRoute.route.exec(url)];
+    params.shift();
 
-    return true;
-  });
-
-  console.log({ userRoute, url });
-
-  if (!userRoute) {
-    res.writeHead(responses.NOT_FOUND.code, { 'Content-Type': 'application/json' });
-    res.write(responses.NOT_FOUND.message);
+    await userRoute.callback(params);
     res.end();
-    return;
+  } catch(e) {
+    res.writeHead(responses.SERVER_ERROR.code, { 'Content-Type': 'application/json' });
+    res.write(responses.SERVER_ERROR.message);
   }
-
-  const params = [...userRoute.route.exec(url)];
-  params.shift();
-
-  await userRoute.callback(params);
-  res.end();
 });
 
 server.listen(port, () => {
