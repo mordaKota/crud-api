@@ -22,11 +22,11 @@
 
 | #   | Method | Route                                       | Body Data                                                               | Description                |
 |-----|--------|---------------------------------------------|-------------------------------------------------------------------------|----------------------------|
-| 1   | GET    | `http://localhost:5000/api/users/`          | -                                                                       | Get all users              |
+| 1   | GET    | `http://localhost:5000/api/users/`          |                                                                      | Get all users              |
 | 2   | POST   | `http://localhost:5000/api/users/`          | Body -> raw + JSON (required properties: "username", "age", "hobbies")  | Create new user            |
-| 3   | GET    | `http://localhost:5000/api/users/${userId}` | -                                                                       | Get the particular user    |
+| 3   | GET    | `http://localhost:5000/api/users/${userId}` |                                                                       | Get the particular user    |
 | 4   | PUT    | `http://localhost:5000/api/users/${userId}` | Body -> raw + JSON (any properties: "username", "age", "hobbies")       | Update the particular user |
-| 5   | DELETE | `http://localhost:5000/api/users/${userId}` | -                                                                       | Delete the particular user |
+| 5   | DELETE | `http://localhost:5000/api/users/${userId}` |                                                                        | Delete the particular user |
 
 
 
